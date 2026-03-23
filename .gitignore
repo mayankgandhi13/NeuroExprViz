@@ -13,3 +13,6 @@ __pycache__/
 
 # macOS
 .DS_Store
+data/processed/norm_expr_matrix.csv
+data/processed/norm_expr_matrix.rds
+data/processed/metadata.rds
