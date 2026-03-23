@@ -1,0 +1,15 @@
+# Raw data — too large for GitHub
+data/raw/
+
+# R session files
+.Rhistory
+.RData
+.Rproj.user/
+
+# Python
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+
+# macOS
+.DS_Store
