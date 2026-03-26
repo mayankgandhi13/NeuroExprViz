@@ -35,31 +35,31 @@ The same DE analysis results are reproduced across three ecosystems:
 ┌─────────────────────────────────────────────────────────────────┐
 │                        DATA ACQUISITION                         │
 │                                                                 │
-│   NCBI GEO (GSE5281)  ──►  GEOquery (R)  ──►  ExpressionSet   │
-│   161 samples · 6 brain regions · Affymetrix HG-U133 Plus 2.0  │
+│   NCBI GEO (GSE5281)  ──►  GEOquery (R)  ──►  ExpressionSet     │
+│   161 samples · 6 brain regions · Affymetrix HG-U133 Plus 2.0   │
 └─────────────────────────┬───────────────────────────────────────┘
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                     PREPROCESSING & QC                          │
 │                                                                 │
-│   Raw Intensities  ──►  RMA Normalization  ──►  Log2 Matrix    │
-│   54,675 probes    ──►  Probe Mapping      ──►  21,358 genes   │
+│   Raw Intensities  ──►  RMA Normalization  ──►  Log2 Matrix     │
+│   54,675 probes    ──►  Probe Mapping      ──►  21,358 genes    │
 │                         (hgu133plus2.db)                        │
-│                    ──►  QC Plots (boxplot · density · PCA)     │
+│                    ──►  QC Plots (boxplot · density · PCA)      │
 └─────────────────────────┬───────────────────────────────────────┘
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │               DIFFERENTIAL EXPRESSION (limma)                   │
 │                                                                 │
-│   Region-stratified analysis · 5 brain regions                 │
-│   Design: ~ 0 + disease  ──►  Contrast: AD - normal            │
-│   eBayes shrinkage  ──►  BH correction  ──►  adj.P < 0.05      │
+│   Region-stratified analysis · 5 brain regions                  │
+│   Design: ~ 0 + disease  ──►  Contrast: AD - normal             │
+│   eBayes shrinkage  ──►  BH correction  ──►  adj.P < 0.05       │
 │                                                                 │
-│   Entorhinal Cortex   →  3,358 DEGs (1,434↑ · 1,924↓)         │
-│   Superior Frontal    →    841 DEGs   (691↑ ·   150↓)         │
-│   Primary Visual      →      0 DEGs  (biological control)      │
+│   Entorhinal Cortex   →  3,358 DEGs (1,434↑ · 1,924↓)           │
+│   Superior Frontal    →    841 DEGs   (691↑ ·   150↓)           │
+│   Primary Visual      →      0 DEGs  (biological control)       │
 └──────────────┬──────────────────────────┬───────────────────────┘
                │                          │
                ▼                          ▼
@@ -78,16 +78,16 @@ The same DE analysis results are reproduced across three ecosystems:
                │                       │                       │
                ▼                       ▼                       ▼
 ┌──────────────────────┐ ┌─────────────────────┐ ┌────────────────────┐
-│    R FIGURES         │ │  PYTHON FIGURES      │ │  JS DASHBOARD      │
-│    (RStudio)         │ │  (VS Code)           │ │  (VS Code)         │
-│                      │ │                      │ │                    │
-│  EnhancedVolcano     │ │  Matplotlib volcano  │ │  Plotly.js volcano │
-│  ComplexHeatmap      │ │  Seaborn clustermap  │ │  GSEA bubbles      │
-│  GSEA ridge/dot      │ │  Seaborn PCA         │ │  DEG bar chart     │
-│  PCA biplot          │ │  Correlation heatmap │ │  Gene search       │
-│  ORA dotplot         │ │  logFC distribution  │ │  Region toggle     │
-│                      │ │                      │ │                    │
-│  14 PNGs             │ │  8 PNGs              │ │  GitHub Pages ✓    │
+│    R FIGURES         │ │  PYTHON FIGURES     │ │  JS DASHBOARD      │
+│    (RStudio)         │ │  (VS Code)          │ │  (VS Code)         │
+│                      │ │                     │ │                    │
+│  EnhancedVolcano     │ │  Matplotlib volcano │ │  Plotly.js volcano │
+│  ComplexHeatmap      │ │  Seaborn clustermap │ │  GSEA bubbles      │
+│  GSEA ridge/dot      │ │  Seaborn PCA        │ │  DEG bar chart     │
+│  PCA biplot          │ │  Correlation heatmap│ │  Gene search       │
+│  ORA dotplot         │ │  logFC distribution │ │  Region toggle     │
+│                      │ │                     │ │                    │
+│  14 PNGs             │ │  8 PNGs             │ │  GitHub Pages ✓    │
 └──────────────────────┘ └─────────────────────┘ └────────────────────┘
 ```
 
