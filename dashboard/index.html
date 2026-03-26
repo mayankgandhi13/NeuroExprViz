@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroExprViz — Alzheimer's Transcriptomics</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+<body>
+
+  <!-- ── HEADER ──────────────────────────────────── -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      <div>
+        <div class="logo-text">NeuroExpr<span>Viz</span></div>
+        <div class="logo-sub">Alzheimer's Transcriptomics · GSE5281</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="tag tag-ds">GSE5281 · n=105</span>
+      <span class="tag tag-r">R</span>
+      <span class="tag tag-py">Python</span>
+      <span class="tag tag-js">JS</span>
+    </div>
+  </header>
+
+  <!-- ── HERO ────────────────────────────────────── -->
+  <div class="hero">
+    <div class="hero-left">
+      <h2>Alzheimer's Disease <span>Transcriptomics</span><br>Cross-Tool Visualization</h2>
+      <p>
+        Differential expression analysis of GSE5281 — comparing visualization
+        efficiency across R (limma · ggplot2), Python (Seaborn · Matplotlib)
+        and JavaScript (Plotly.js) for bioinformatics workflows.
+      </p>
+      <div class="hero-tags">
+        <span class="hero-tag">limma · DESeq2</span>
+        <span class="hero-tag">GO ORA · GSEA</span>
+        <span class="hero-tag">5 Brain Regions</span>
+        <span class="hero-tag">Microarray</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STATS STRIP ──────────────────────────────── -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val blue">21,358</div>
+      <div class="stat-label">Genes Tested</div>
+      <div class="stat-sub">Affymetrix HG-U133 Plus 2.0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val red">3,358</div>
+      <div class="stat-label">DEGs · Entorhinal Cortex</div>
+      <div class="stat-sub">adj.P &lt; 0.05 · |logFC| &gt; 1</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val purple">841</div>
+      <div class="stat-label">DEGs · Superior Frontal Gyrus</div>
+      <div class="stat-sub">adj.P &lt; 0.05 · |logFC| &gt; 1</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val green">27</div>
+      <div class="stat-label">Enriched Pathways · EC</div>
+      <div class="stat-sub">Hallmark GSEA · padj &lt; 0.05</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val yellow">105</div>
+      <div class="stat-label">Clean Samples</div>
+      <div class="stat-sub">44 AD · 61 normal · 5 regions</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 1 — INTERACTIVE JS PLOTS
+  ══════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <div class="section-title">Interactive Analysis</div>
+    <div class="section-desc">Plotly.js — hover · zoom · filter · export</div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Region</span>
+      <select id="region-select" onchange="updateDashboard()">
+        <option value="EC" selected>Entorhinal Cortex</option>
+        <option value="SFG">Superior Frontal Gyrus</option>
+      </select>
+    </div>
+    <div class="divider"></div>
+    <div class="control-group">
+      <span class="control-label">logFC cutoff</span>
+      <select id="fc-select" onchange="updateDashboard()">
+        <option value="1">|logFC| &gt; 1</option>
+        <option value="1.5">|logFC| &gt; 1.5</option>
+        <option value="2">|logFC| &gt; 2</option>
+      </select>
+    </div>
+    <div class="divider"></div>
+    <div class="control-group">
+      <span class="control-label">NS Genes</span>
+      <select id="ns-select" onchange="updateDashboard()">
+        <option value="show">Show</option>
+        <option value="hide">Hide</option>
+      </select>
+    </div>
+    <div class="divider"></div>
+    <div class="control-group">
+      <span class="control-label">Search Gene</span>
+      <input id="gene-search" type="text" placeholder="e.g. GFAP, APOE..."
+             onkeyup="searchGene()" />
+    </div>
+    <div class="divider"></div>
+    <span class="control-info">hover for details · scroll to zoom · click legend to filter</span>
+  </div>
+
+  <!-- Interactive charts grid -->
+  <div class="grid">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Volcano Plot</div>
+          <div class="card-desc">Interactive DE results · hover for gene info · click to highlight</div>
+        </div>
+        <span class="card-tag">Plotly.js · scatter</span>
+      </div>
+      <div id="volcano-plot" class="chart-container"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">DEG Summary</div>
+          <div class="card-desc">Up/Down counts per brain region</div>
+        </div>
+        <span class="card-tag">Plotly.js · bar</span>
+      </div>
+      <div id="summary-plot" class="chart-container"></div>
+    </div>
+
+    <div class="card full">
+      <div class="card-header">
+        <div>
+          <div class="card-title">GSEA Pathway Bubble Chart</div>
+          <div class="card-desc">
+            Hallmark gene sets · NES vs −log₁₀(padj) · bubble size = leading edge genes · click bubble for pathway details
+          </div>
+        </div>
+        <span class="card-tag">Plotly.js · scatter</span>
+      </div>
+      <div id="gsea-plot" class="chart-container short"></div>
+      <div id="pathway-panel" class="pathway-panel hidden">
+        <div class="pathway-panel-header">
+          <span id="pathway-name"></span>
+          <button onclick="closePathwayPanel()">✕</button>
+        </div>
+        <div id="pathway-genes" class="pathway-genes"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 2 — TOOL COMPARISON
+  ══════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <div class="section-title">Same Data, Three Tools</div>
+    <div class="section-desc">The same biological question — answered in R, Python, and JavaScript</div>
+  </div>
+
+  <div class="comparison-nav">
+    <button class="comp-btn active" onclick="switchPlot('volcano')">Volcano Plot</button>
+    <button class="comp-btn" onclick="switchPlot('heatmap')">Heatmap</button>
+    <button class="comp-btn" onclick="switchPlot('pca')">PCA</button>
+    <button class="comp-btn" onclick="switchPlot('enrichment')">Enrichment</button>
+  </div>
+
+  <div class="comparison-area">
+    <div class="tool-tabs">
+      <button class="tool-tab active" onclick="switchTool('r')">
+        <span class="tool-dot r"></span> R
+      </button>
+      <button class="tool-tab" onclick="switchTool('python')">
+        <span class="tool-dot py"></span> Python
+      </button>
+      <button class="tool-tab" onclick="switchTool('js')">
+        <span class="tool-dot js"></span> JavaScript
+      </button>
+    </div>
+
+    <!-- R tab -->
+    <div id="tab-r" class="tool-content active">
+      <div class="tool-split">
+        <div class="tool-image-wrap">
+          <img id="r-plot-img" src="../figures/r_output/11_volcano_EC.png" alt="R plot" />
+        </div>
+        <div class="tool-info">
+          <div class="tool-info-title">R — ggplot2 / EnhancedVolcano</div>
+          <div class="tool-info-desc">
+            Publication-quality static figures. R's bioinformatics ecosystem
+            (limma, ggplot2, ComplexHeatmap) is the industry standard for
+            omics analysis. Minimal code for maximum scientific output.
+          </div>
+          <div class="tool-metrics">
+            <div class="metric"><span class="metric-label">Lines of code</span><span class="metric-val">~8</span></div>
+            <div class="metric"><span class="metric-label">Interactivity</span><span class="metric-val red-text">None</span></div>
+            <div class="metric"><span class="metric-label">Output</span><span class="metric-val">PNG / PDF</span></div>
+            <div class="metric"><span class="metric-label">Best for</span><span class="metric-val">Publications</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Python tab -->
+    <div id="tab-python" class="tool-content">
+      <div class="tool-split">
+        <div class="tool-image-wrap">
+          <img id="py-plot-img" src="../figures/python_output/01_volcano_EC.png" alt="Python plot" />
+        </div>
+        <div class="tool-info">
+          <div class="tool-info-title">Python — Matplotlib / Seaborn</div>
+          <div class="tool-info-desc">
+            More verbose than R for the same output but integrates seamlessly
+            with ML pipelines (scikit-learn, pandas). Ideal when your
+            analysis and visualization live in the same notebook.
+          </div>
+          <div class="tool-metrics">
+            <div class="metric"><span class="metric-label">Lines of code</span><span class="metric-val">~35</span></div>
+            <div class="metric"><span class="metric-label">Interactivity</span><span class="metric-val red-text">None</span></div>
+            <div class="metric"><span class="metric-label">Output</span><span class="metric-val">PNG / SVG</span></div>
+            <div class="metric"><span class="metric-label">Best for</span><span class="metric-val">ML Pipelines</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JS tab -->
+    <div id="tab-js" class="tool-content">
+      <div class="tool-split">
+        <div class="tool-image-wrap" id="js-plot-container">
+          <div id="comparison-volcano" style="width:100%;height:400px;"></div>
+        </div>
+        <div class="tool-info">
+          <div class="tool-info-title">JavaScript — Plotly.js</div>
+          <div class="tool-info-desc">
+            Full interactivity — hover, zoom, filter, export. The only tool
+            that runs in a browser with no backend. Steeper learning curve
+            but essential for sharing results with non-bioinformaticians
+            and building web-based genomics tools.
+          </div>
+          <div class="tool-metrics">
+            <div class="metric"><span class="metric-label">Lines of code</span><span class="metric-val">~80</span></div>
+            <div class="metric"><span class="metric-label">Interactivity</span><span class="metric-val green-text">Full</span></div>
+            <div class="metric"><span class="metric-label">Output</span><span class="metric-val">Web / PNG</span></div>
+            <div class="metric"><span class="metric-label">Best for</span><span class="metric-val">Sharing / Web</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison table -->
+  <div class="comparison-table-wrap">
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th class="r-col">R</th>
+          <th class="py-col">Python</th>
+          <th class="js-col">JavaScript</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Setup complexity</td><td>Low</td><td>Low</td><td>Medium</td></tr>
+        <tr><td>Bioinformatics packages</td><td class="best">Excellent</td><td>Good</td><td>None</td></tr>
+        <tr><td>Statistical analysis</td><td class="best">Excellent</td><td>Good</td><td>None</td></tr>
+        <tr><td>Interactivity</td><td>None</td><td>Limited</td><td class="best">Full</td></tr>
+        <tr><td>Web deployment</td><td>Shiny only</td><td>Dash/Streamlit</td><td class="best">Native</td></tr>
+        <tr><td>ML integration</td><td>Good</td><td class="best">Excellent</td><td>None</td></tr>
+        <tr><td>Publication figures</td><td class="best">Excellent</td><td>Good</td><td>Limited</td></tr>
+        <tr><td>Learning curve</td><td>Low</td><td>Low</td><td>High</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 3 — METHODS
+  ══════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <div class="section-title">Methods & Pipeline</div>
+    <div class="section-desc">How this analysis was built</div>
+  </div>
+
+  <div class="methods-grid">
+    <div class="method-card">
+      <div class="method-step">01</div>
+      <div class="method-title">Data Acquisition</div>
+      <div class="method-desc">GSE5281 downloaded from NCBI GEO using GEOquery. 161 samples across 6 brain regions on Affymetrix HG-U133 Plus 2.0.</div>
+      <div class="method-tag">R · GEOquery</div>
+    </div>
+    <div class="method-card">
+      <div class="method-step">02</div>
+      <div class="method-title">Preprocessing</div>
+      <div class="method-desc">RMA normalization, probe-to-gene mapping via hgu133plus2.db, duplicate probe collapsing. 54,675 probes → 21,358 genes.</div>
+      <div class="method-tag">R · affy · biomaRt</div>
+    </div>
+    <div class="method-card">
+      <div class="method-step">03</div>
+      <div class="method-title">Differential Expression</div>
+      <div class="method-desc">Region-stratified limma analysis. Design matrix with AD vs normal contrast. eBayes shrinkage. BH correction at adj.P &lt; 0.05.</div>
+      <div class="method-tag">R · limma</div>
+    </div>
+    <div class="method-card">
+      <div class="method-step">04</div>
+      <div class="method-title">Enrichment Analysis</div>
+      <div class="method-desc">GO ORA on significant DEGs and GSEA on full ranked gene lists using Hallmark gene sets from MSigDB.</div>
+      <div class="method-tag">R · clusterProfiler · fgsea</div>
+    </div>
+    <div class="method-card">
+      <div class="method-step">05</div>
+      <div class="method-title">Python Visualization</div>
+      <div class="method-desc">Same DE results reproduced in Python using Seaborn and Matplotlib. PCA with scikit-learn. Clustermap of top 50 DEGs.</div>
+      <div class="method-tag">Python · Seaborn · sklearn</div>
+    </div>
+    <div class="method-card">
+      <div class="method-step">06</div>
+      <div class="method-title">Interactive Dashboard</div>
+      <div class="method-desc">Vanilla JS dashboard using Plotly.js. Loads CSV results via fetch(). Deployed to GitHub Pages with zero backend.</div>
+      <div class="method-tag">JavaScript · Plotly.js</div>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ────────────────────────────────────── -->
+  <footer>
+    <div class="footer-left">
+      <div class="footer-logo">🧠 NeuroExprViz</div>
+      <div class="footer-sub">GSE5281 · Alzheimer's Disease Transcriptomics · Cross-Tool Visualization</div>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/mayankgandhi13/NeuroExprViz" target="_blank">GitHub ↗</a>
+      <a href="https://github.com/mayankgandhi13/NeuroExprViz/tree/main/R">R Pipeline</a>
+      <a href="https://github.com/mayankgandhi13/NeuroExprViz/tree/main/python">Python EDA</a>
+      <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE5281" target="_blank">GSE5281 ↗</a>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="volcano.js"></script>
+  <script src="summary.js"></script>
+  <script src="comparison.js"></script>
+
+  <script>
+    let currentPlot = 'volcano';
+    let currentTool = 'r';
+
+    function updateDashboard() {
+      const region = document.getElementById('region-select').value;
+      const fc     = parseFloat(document.getElementById('fc-select').value);
+      const showNS = document.getElementById('ns-select').value === 'show';
+      renderVolcano(region, fc, showNS);
+      renderSummary();
+      renderGSEA(region);
+    }
+
+    function searchGene() {
+      const gene   = document.getElementById('gene-search').value.trim().toUpperCase();
+      const region = document.getElementById('region-select').value;
+      const fc     = parseFloat(document.getElementById('fc-select').value);
+      const showNS = document.getElementById('ns-select').value === 'show';
+      renderVolcano(region, fc, showNS, gene);
+    }
+
+    function closePathwayPanel() {
+      document.getElementById('pathway-panel').classList.add('hidden');
+    }
+
+    function switchPlot(plot) {
+      currentPlot = plot;
+      document.querySelectorAll('.comp-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      updateComparisonImages();
+    }
+
+    function switchTool(tool) {
+      currentTool = tool;
+      document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      document.querySelectorAll('.tool-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(`tab-${tool}`).classList.add('active');
+      if (tool === 'js') renderComparisonPlot(currentPlot);
+    }
+
+    function updateComparisonImages() {
+      const plotMap = {
+        volcano:    { r: '11_volcano_EC.png',    py: '01_volcano_EC.png' },
+        heatmap:    { r: '13_heatmap_top50.png', py: '07_clustermap.png' },
+        pca:        { r: '14_pca_clean.png',     py: '06_pca.png' },
+        enrichment: { r: '09_gsea_dot_EC.png',   py: '05_correlation_heatmap.png' }
+      };
+      const map = plotMap[currentPlot];
+      document.getElementById('r-plot-img').src  = `../figures/r_output/${map.r}`;
+      document.getElementById('py-plot-img').src = `../figures/python_output/${map.py}`;
+      if (currentTool === 'js') renderComparisonPlot(currentPlot);
+    }
+
+    updateDashboard();
+  </script>
+
+</body>
+</html>
